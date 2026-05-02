@@ -1,4 +1,4 @@
-import type { SchemaRow } from "./schema";
+import type { FileSchema, SensitivityLevel } from "./schema";
 
 export type RiskLevel = "HIGH" | "MEDIUM" | "LOW";
 
@@ -7,44 +7,57 @@ export interface RiskResult {
   k: number;
   level: RiskLevel;
   combos: { cols: string[]; label: string }[];
-  q: number;
-  d: number;
-  s: number;
+  sensitivity: SensitivityLevel;
+  columnCount: number;
 }
 
-export function computeRisk(rows: SchemaRow[]): RiskResult {
-  const q = rows.filter((r) => r.sens === "Quasi-identifier").length;
-  const d = rows.filter((r) => r.sens === "Direct identifier").length;
-  const s = rows.filter((r) => r.sens === "Sensitive").length;
+export function computeRisk(schema: FileSchema): RiskResult {
+  const { columns, sensitivity } = schema;
+  const columnCount = columns.length;
+  const colNames = columns.map((c) => c.name || "unnamed");
 
-  const score = Math.min(100, q * 14 + d * 28 + s * 7);
-  const k = Math.max(1, 30 - q * 6 - d * 8);
-
-  const qCols = rows.filter((r) => r.sens === "Quasi-identifier").map((r) => r.name || "unnamed");
-  const dCols = rows.filter((r) => r.sens === "Direct identifier").map((r) => r.name || "unnamed");
-  const sCols = rows.filter((r) => r.sens === "Sensitive").map((r) => r.name || "unnamed");
-
+  let score = 0;
+  let k = 30;
   const combos: { cols: string[]; label: string }[] = [];
-  if (dCols.length > 0) {
-    combos.push({ cols: dCols.slice(0, 3), label: "Trivially re-identifiable" });
-  }
-  if (qCols.length >= 2) {
-    combos.push({ cols: qCols.slice(0, 3), label: "87% re-id probability via linkage" });
-  }
-  if (qCols.length >= 1 && sCols.length >= 1) {
-    combos.push({ cols: [qCols[0], sCols[0]], label: "Sensitive attribute inference risk" });
+
+  switch (sensitivity) {
+    case "Direct identifier":
+      score = Math.min(100, 70 + columnCount * 3);
+      k = 1;
+      combos.push({ cols: colNames.slice(0, 3), label: "Trivially re-identifiable" });
+      break;
+    case "Sensitive":
+      score = Math.min(100, 50 + columnCount * 4);
+      k = Math.max(2, 15 - columnCount);
+      combos.push({ cols: colNames.slice(0, 3), label: "Sensitive data exposure risk" });
+      break;
+    case "Quasi-identifier":
+      score = Math.min(100, 30 + columnCount * 6);
+      k = Math.max(2, 20 - columnCount * 2);
+      if (columnCount >= 2) {
+        combos.push({ cols: colNames.slice(0, 3), label: "87% re-id probability via linkage" });
+      }
+      break;
+    case "Public":
+    default:
+      score = Math.min(30, columnCount * 2);
+      k = 30;
+      break;
   }
 
   const level: RiskLevel = score >= 70 ? "HIGH" : score >= 40 ? "MEDIUM" : "LOW";
-  return { score, k, level, combos, q, d, s };
+  return { score, k, level, combos, sensitivity, columnCount };
 }
 
-export function getKDescription(k: number, q: number, d: number): string {
-  if (d > 0) {
+export function getKDescription(k: number, sensitivity: SensitivityLevel, columnCount: number): string {
+  if (sensitivity === "Direct identifier") {
     return `<strong>Direct identifiers present</strong> — each record is unique and trivially re-identifiable.`;
   }
+  if (sensitivity === "Sensitive") {
+    return `<strong>Sensitive data</strong> with ${columnCount} columns — high risk of attribute disclosure.`;
+  }
   if (k < 3) {
-    return `With <strong>${q} quasi-identifiers</strong>, most individuals can be uniquely identified by combining these columns.`;
+    return `With <strong>${columnCount} quasi-identifiers</strong>, most individuals can be uniquely identified by combining these columns.`;
   }
   if (k < 5) {
     return `<strong>Marginal anonymity</strong> — each record matches at least ${k} others, but below HIPAA Safe Harbor threshold of k=5.`;

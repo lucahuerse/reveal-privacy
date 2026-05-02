@@ -146,7 +146,7 @@ export function AnalysisStep({
               <div
                 className="text-[13px] text-text-2 leading-relaxed"
                 dangerouslySetInnerHTML={{
-                  __html: getKDescription(riskResult.k, riskResult.q, riskResult.d),
+                  __html: getKDescription(riskResult.k, riskResult.sensitivity, riskResult.columnCount),
                 }}
               />
             </div>

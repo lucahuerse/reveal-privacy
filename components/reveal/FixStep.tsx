@@ -4,13 +4,11 @@ import { useRef, useEffect } from "react";
 import { Trash2, Minimize2, Shield, Lock, Waves } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { type SchemaRow, getGeneralizedName } from "@/lib/schema";
+import { type FileSchema, getGeneralizedName } from "@/lib/schema";
 import { cn } from "@/lib/utils";
 
 interface FixStepProps {
-  rows: SchemaRow[];
-  hasDirectIdentifiers: boolean;
-  hasSensitive: boolean;
+  schema: FileSchema;
 }
 
 interface FixItem {
@@ -23,8 +21,13 @@ interface FixItem {
   condition: boolean;
 }
 
-export function FixStep({ rows, hasDirectIdentifiers, hasSensitive }: FixStepProps) {
+export function FixStep({ schema }: FixStepProps) {
   const sectionRef = useRef<HTMLDivElement>(null);
+  const { columns, sensitivity } = schema;
+
+  const isDirectIdentifier = sensitivity === "Direct identifier";
+  const isSensitive = sensitivity === "Sensitive";
+  const isQuasi = sensitivity === "Quasi-identifier";
 
   useEffect(() => {
     sectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -38,7 +41,7 @@ export function FixStep({ rows, hasDirectIdentifiers, hasSensitive }: FixStepPro
       priority: "CRITICAL" as const,
       priorityClass: "bg-red-light text-red border-red-mid",
       description: "Drop all columns tagged Direct identifier before sharing",
-      condition: hasDirectIdentifiers,
+      condition: isDirectIdentifier,
     },
     {
       icon: <Minimize2 className="w-3.5 h-3.5" />,
@@ -47,7 +50,7 @@ export function FixStep({ rows, hasDirectIdentifiers, hasSensitive }: FixStepPro
       priority: "HIGH" as const,
       priorityClass: "bg-orange-light text-orange border-orange-mid",
       description: "Replace exact values with ranges (Age to bracket, ZIP to prefix)",
-      condition: true,
+      condition: isQuasi,
     },
     {
       icon: <Shield className="w-3.5 h-3.5" />,
@@ -56,7 +59,7 @@ export function FixStep({ rows, hasDirectIdentifiers, hasSensitive }: FixStepPro
       priority: "MED" as const,
       priorityClass: "bg-yellow-light text-yellow border-yellow-mid",
       description: "Suppress/aggregate until k >= 5 per HIPAA Safe Harbor",
-      condition: true,
+      condition: isQuasi || isSensitive,
     },
     {
       icon: <Lock className="w-3.5 h-3.5" />,
@@ -65,7 +68,7 @@ export function FixStep({ rows, hasDirectIdentifiers, hasSensitive }: FixStepPro
       priority: "MED" as const,
       priorityClass: "bg-yellow-light text-yellow border-yellow-mid",
       description: "Diversify sensitive attribute values within each equivalence class",
-      condition: hasSensitive,
+      condition: isSensitive,
     },
     {
       icon: <Waves className="w-3.5 h-3.5" />,
@@ -153,13 +156,13 @@ export function FixStep({ rows, hasDirectIdentifiers, hasSensitive }: FixStepPro
                 </tr>
               </thead>
               <tbody>
-                {rows.map((row) => {
-                  const isRemoved = row.sens === "Direct identifier";
-                  const isChanged = row.sens === "Quasi-identifier";
-                  const proposedName = getGeneralizedName(row.name, row.sens);
+                {columns.map((col) => {
+                  const isRemoved = isDirectIdentifier;
+                  const isChanged = isQuasi;
+                  const proposedName = getGeneralizedName(col.name, sensitivity);
 
                   return (
-                    <tr key={row.id} className="border-b border-border last:border-0">
+                    <tr key={col.id} className="border-b border-border last:border-0">
                       <td className="py-2 px-2.5">
                         <span
                           className={cn(
@@ -167,7 +170,7 @@ export function FixStep({ rows, hasDirectIdentifiers, hasSensitive }: FixStepPro
                             (isRemoved || isChanged) && "line-through text-text-3"
                           )}
                         >
-                          {row.name || "unnamed"}
+                          {col.name || "unnamed"}
                         </span>
                       </td>
                       <td className="py-2 px-2.5">

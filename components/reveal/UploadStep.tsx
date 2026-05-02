@@ -4,11 +4,11 @@ import { useState, useCallback } from "react";
 import { Upload, Plus, FolderOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { extractHeaders } from "@/lib/csv";
-import { guessSens, type SchemaRow } from "@/lib/schema";
+import { guessSensitivityFromColumns, type ColumnInfo, type SensitivityLevel } from "@/lib/schema";
 import { uid } from "@/lib/utils";
 
 interface UploadStepProps {
-  onFileProcessed: (rows: SchemaRow[], fileName: string) => void;
+  onFileProcessed: (columns: ColumnInfo[], fileName: string, sensitivity: SensitivityLevel) => void;
   onStartFromScratch: () => void;
 }
 
@@ -24,14 +24,13 @@ export function UploadStep({ onFileProcessed, onStartFromScratch }: UploadStepPr
           return;
         }
 
-        const rows: SchemaRow[] = headers.map((h) => ({
+        const columns: ColumnInfo[] = headers.map((h) => ({
           id: uid(),
           name: h,
-          sens: guessSens(h),
-          auto: true,
         }));
 
-        onFileProcessed(rows, file.name);
+        const sensitivity = guessSensitivityFromColumns(headers);
+        onFileProcessed(columns, file.name, sensitivity);
       } catch {
         alert("Could not parse file. Please try a different format.");
       }
