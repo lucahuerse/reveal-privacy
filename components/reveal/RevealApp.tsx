@@ -94,6 +94,16 @@ export function RevealApp() {
     setStep(4);
   }, []);
 
+  const handleBackToSchema = useCallback(() => {
+    setStep(2);
+    setShowFixes(false);
+  }, []);
+
+  const handleBackToAnalysis = useCallback(() => {
+    setStep(3);
+    setShowFixes(false);
+  }, []);
+
   return (
     <div className="min-h-screen flex flex-col">
       <TopBanner />
@@ -112,7 +122,7 @@ export function RevealApp() {
             />
           )}
 
-          {step >= 2 && schema && (
+          {step === 2 && schema && (
             <SchemaStep
               schema={schema}
               onSchemaChange={handleSchemaChange}
@@ -121,18 +131,21 @@ export function RevealApp() {
             />
           )}
 
-          {step >= 3 && riskResult && (
+          {step === 3 && riskResult && schema && (
             <AnalysisStep
               riskResult={riskResult}
               timestamp={analysisTimestamp}
+              schema={schema}
               onRerun={handleAnalyze}
               onSuggestFixes={handleSuggestFixes}
+              onBack={handleBackToSchema}
             />
           )}
 
-          {step >= 4 && showFixes && schema && (
+          {step === 4 && showFixes && schema && (
             <FixStep
               schema={schema}
+              onBack={handleBackToAnalysis}
             />
           )}
         </div>

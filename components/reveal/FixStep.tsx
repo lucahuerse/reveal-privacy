@@ -1,14 +1,16 @@
 "use client";
 
 import { useRef, useEffect } from "react";
-import { Trash2, Minimize2, Shield, Lock, Waves } from "lucide-react";
+import { Trash2, Minimize2, Shield, Lock, Waves, ArrowLeft } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { type FileSchema, getGeneralizedName } from "@/lib/schema";
 import { cn } from "@/lib/utils";
 
 interface FixStepProps {
   schema: FileSchema;
+  onBack: () => void;
 }
 
 interface FixItem {
@@ -21,7 +23,7 @@ interface FixItem {
   condition: boolean;
 }
 
-export function FixStep({ schema }: FixStepProps) {
+export function FixStep({ schema, onBack }: FixStepProps) {
   const sectionRef = useRef<HTMLDivElement>(null);
   const { columns, sensitivity } = schema;
 
@@ -85,13 +87,17 @@ export function FixStep({ schema }: FixStepProps) {
 
   return (
     <div ref={sectionRef} className="anim-in">
-      <div className="h-px bg-border my-8" />
-
-      <div className="flex items-center gap-2 mb-4">
-        <div className="w-[22px] h-[22px] bg-green rounded-[6px] flex items-center justify-center text-white text-[11px] font-bold">
-          4
+      <div className="flex items-center justify-between mb-6">
+        <Button variant="ghost" size="sm" onClick={onBack}>
+          <ArrowLeft className="w-3.5 h-3.5" />
+          Back to analysis
+        </Button>
+        <div className="flex items-center gap-2">
+          <div className="w-[22px] h-[22px] bg-green rounded-[6px] flex items-center justify-center text-white text-[11px] font-bold">
+            4
+          </div>
+          <h2 className="text-[15px] font-bold text-text-1">Remediation Plan</h2>
         </div>
-        <h2 className="text-[15px] font-bold text-text-1">Remediation Plan</h2>
       </div>
 
       <Card>
