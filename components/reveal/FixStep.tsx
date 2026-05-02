@@ -30,12 +30,12 @@ export function FixStep({ rows, hasDirectIdentifiers, hasSensitive }: FixStepPro
     sectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   }, []);
 
-  const fixItems: FixItem[] = [
+  const allFixItems: FixItem[] = [
     {
       icon: <Trash2 className="w-3.5 h-3.5" />,
       iconClass: "bg-red-light text-red",
       title: "Remove Direct Identifiers",
-      priority: "CRITICAL",
+      priority: "CRITICAL" as const,
       priorityClass: "bg-red-light text-red border-red-mid",
       description: "Drop all columns tagged Direct identifier before sharing",
       condition: hasDirectIdentifiers,
@@ -44,7 +44,7 @@ export function FixStep({ rows, hasDirectIdentifiers, hasSensitive }: FixStepPro
       icon: <Minimize2 className="w-3.5 h-3.5" />,
       iconClass: "bg-orange-light text-orange",
       title: "Generalize Quasi-Identifiers",
-      priority: "HIGH",
+      priority: "HIGH" as const,
       priorityClass: "bg-orange-light text-orange border-orange-mid",
       description: "Replace exact values with ranges (Age to bracket, ZIP to prefix)",
       condition: true,
@@ -53,7 +53,7 @@ export function FixStep({ rows, hasDirectIdentifiers, hasSensitive }: FixStepPro
       icon: <Shield className="w-3.5 h-3.5" />,
       iconClass: "bg-yellow-light text-yellow",
       title: "Enforce k-Anonymity >= 5",
-      priority: "MED",
+      priority: "MED" as const,
       priorityClass: "bg-yellow-light text-yellow border-yellow-mid",
       description: "Suppress/aggregate until k >= 5 per HIPAA Safe Harbor",
       condition: true,
@@ -62,7 +62,7 @@ export function FixStep({ rows, hasDirectIdentifiers, hasSensitive }: FixStepPro
       icon: <Lock className="w-3.5 h-3.5" />,
       iconClass: "bg-yellow-light text-yellow",
       title: "Apply l-Diversity",
-      priority: "MED",
+      priority: "MED" as const,
       priorityClass: "bg-yellow-light text-yellow border-yellow-mid",
       description: "Diversify sensitive attribute values within each equivalence class",
       condition: hasSensitive,
@@ -71,12 +71,14 @@ export function FixStep({ rows, hasDirectIdentifiers, hasSensitive }: FixStepPro
       icon: <Waves className="w-3.5 h-3.5" />,
       iconClass: "bg-blue-light text-blue",
       title: "Differential Privacy Noise",
-      priority: "LOW",
+      priority: "LOW" as const,
       priorityClass: "bg-blue-light text-blue border-blue-mid",
       description: "Add Laplace/Gaussian noise for ML/aggregate outputs",
       condition: true,
     },
-  ].filter((item) => item.condition);
+  ];
+
+  const fixItems = allFixItems.filter((item) => item.condition);
 
   return (
     <div ref={sectionRef} className="anim-in">
