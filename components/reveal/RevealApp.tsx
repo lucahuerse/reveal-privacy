@@ -57,8 +57,8 @@ export function RevealApp() {
     setShowFixes(false);
   }, []);
 
-  const handleSensitivityChange = useCallback((sens: SensitivityLevel) => {
-    setSchema((prev) => (prev ? { ...prev, sensitivity: sens } : null));
+  const handleSchemaChange = useCallback((newSchema: FileSchema) => {
+    setSchema(newSchema);
   }, []);
 
   const handleReset = useCallback(() => {
@@ -115,7 +115,7 @@ export function RevealApp() {
           {step >= 2 && schema && (
             <SchemaStep
               schema={schema}
-              onSensitivityChange={handleSensitivityChange}
+              onSchemaChange={handleSchemaChange}
               onAnalyze={handleAnalyze}
               onReset={handleReset}
             />
