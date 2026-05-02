@@ -8,50 +8,62 @@ import { SchemaStep } from "./SchemaStep";
 import { AnalyzingOverlay } from "./AnalyzingOverlay";
 import { AnalysisStep } from "./AnalysisStep";
 import { FixStep } from "./FixStep";
-import { type SchemaRow } from "@/lib/schema";
+import { type FileSchema, type ColumnInfo, type SensitivityLevel } from "@/lib/schema";
 import { computeRisk, type RiskResult } from "@/lib/risk";
 import { uid } from "@/lib/utils";
 
-const DEFAULT_ROWS: SchemaRow[] = [
-  { id: uid(), name: "ZIP Code", type: "Number", sens: "Quasi-identifier", auto: false },
-  { id: uid(), name: "Age", type: "Number", sens: "Quasi-identifier", auto: false },
-  { id: uid(), name: "Gender", type: "Category", sens: "Quasi-identifier", auto: false },
-  { id: uid(), name: "Diagnosis", type: "Category", sens: "Sensitive", auto: false },
-];
+const DEFAULT_SCHEMA: FileSchema = {
+  columns: [
+    { id: uid(), name: "ZIP Code" },
+    { id: uid(), name: "Age" },
+    { id: uid(), name: "Gender" },
+    { id: uid(), name: "Diagnosis" },
+  ],
+  sensitivity: "Quasi-identifier",
+  fileName: null,
+  fromFile: false,
+};
 
 export function RevealApp() {
   const [step, setStep] = useState<Step>(1);
-  const [rows, setRows] = useState<SchemaRow[]>([]);
-  const [fileName, setFileName] = useState<string | null>(null);
-  const [fromFile, setFromFile] = useState(false);
+  const [schema, setSchema] = useState<FileSchema | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [riskResult, setRiskResult] = useState<RiskResult | null>(null);
   const [analysisTimestamp, setAnalysisTimestamp] = useState("");
   const [showFixes, setShowFixes] = useState(false);
 
-  const handleFileProcessed = useCallback((newRows: SchemaRow[], name: string) => {
-    setRows(newRows);
-    setFileName(name);
-    setFromFile(true);
+  const handleFileProcessed = useCallback(
+    (columns: ColumnInfo[], fileName: string, sensitivity: SensitivityLevel) => {
+      setSchema({
+        columns,
+        sensitivity,
+        fileName,
+        fromFile: true,
+      });
+      setStep(2);
+      setRiskResult(null);
+      setShowFixes(false);
+    },
+    []
+  );
+
+  const handleStartFromScratch = useCallback(() => {
+    setSchema({
+      ...DEFAULT_SCHEMA,
+      columns: DEFAULT_SCHEMA.columns.map((c) => ({ ...c, id: uid() })),
+    });
     setStep(2);
     setRiskResult(null);
     setShowFixes(false);
   }, []);
 
-  const handleStartFromScratch = useCallback(() => {
-    setRows(DEFAULT_ROWS.map((r) => ({ ...r, id: uid() })));
-    setFileName(null);
-    setFromFile(false);
-    setStep(2);
-    setRiskResult(null);
-    setShowFixes(false);
+  const handleSensitivityChange = useCallback((sens: SensitivityLevel) => {
+    setSchema((prev) => (prev ? { ...prev, sensitivity: sens } : null));
   }, []);
 
   const handleReset = useCallback(() => {
     setStep(1);
-    setRows([]);
-    setFileName(null);
-    setFromFile(false);
+    setSchema(null);
     setRiskResult(null);
     setShowFixes(false);
   }, []);
@@ -62,26 +74,25 @@ export function RevealApp() {
   }, []);
 
   const handleAnalysisComplete = useCallback(() => {
-    const result = computeRisk(rows);
-    setRiskResult(result);
-    setAnalysisTimestamp(
-      new Date().toLocaleTimeString("en-US", {
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: false,
-      })
-    );
+    if (schema) {
+      const result = computeRisk(schema);
+      setRiskResult(result);
+      setAnalysisTimestamp(
+        new Date().toLocaleTimeString("en-US", {
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: false,
+        })
+      );
+    }
     setIsAnalyzing(false);
     setStep(3);
-  }, [rows]);
+  }, [schema]);
 
   const handleSuggestFixes = useCallback(() => {
     setShowFixes(true);
     setStep(4);
   }, []);
-
-  const hasDirectIdentifiers = rows.some((r) => r.sens === "Direct identifier");
-  const hasSensitive = rows.some((r) => r.sens === "Sensitive");
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -101,12 +112,10 @@ export function RevealApp() {
             />
           )}
 
-          {step >= 2 && (
+          {step >= 2 && schema && (
             <SchemaStep
-              rows={rows}
-              fileName={fileName}
-              fromFile={fromFile}
-              onRowsChange={setRows}
+              schema={schema}
+              onSensitivityChange={handleSensitivityChange}
               onAnalyze={handleAnalyze}
               onReset={handleReset}
             />
@@ -121,11 +130,9 @@ export function RevealApp() {
             />
           )}
 
-          {step >= 4 && showFixes && (
+          {step >= 4 && showFixes && schema && (
             <FixStep
-              rows={rows}
-              hasDirectIdentifiers={hasDirectIdentifiers}
-              hasSensitive={hasSensitive}
+              schema={schema}
             />
           )}
         </div>
