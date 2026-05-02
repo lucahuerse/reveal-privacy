@@ -4,7 +4,7 @@ import { useState, useCallback } from "react";
 import { Upload, Plus, FolderOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { extractHeaders } from "@/lib/csv";
-import { guessType, guessSens, type SchemaRow } from "@/lib/schema";
+import { guessSens, type SchemaRow } from "@/lib/schema";
 import { uid } from "@/lib/utils";
 
 interface UploadStepProps {
@@ -27,7 +27,6 @@ export function UploadStep({ onFileProcessed, onStartFromScratch }: UploadStepPr
         const rows: SchemaRow[] = headers.map((h) => ({
           id: uid(),
           name: h,
-          type: guessType(h),
           sens: guessSens(h),
           auto: true,
         }));

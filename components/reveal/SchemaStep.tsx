@@ -15,9 +15,7 @@ import {
 } from "@/components/ui/select";
 import {
   type SchemaRow,
-  type DataType,
   type SensitivityLevel,
-  DATA_TYPES,
   SENSITIVITY_LEVELS,
 } from "@/lib/schema";
 import { uid, cn } from "@/lib/utils";
@@ -68,7 +66,6 @@ export function SchemaStep({
     const newRow: SchemaRow = {
       id: uid(),
       name: "",
-      type: "Text",
       sens: "Public",
       auto: false,
     };
@@ -132,9 +129,6 @@ export function SchemaStep({
                 <th className="text-left text-[11px] font-semibold text-text-3 uppercase tracking-wide py-2.5 px-4">
                   Column Name
                 </th>
-                <th className="w-40 text-left text-[11px] font-semibold text-text-3 uppercase tracking-wide py-2.5 px-4">
-                  Data Type
-                </th>
                 <th className="w-52 text-left text-[11px] font-semibold text-text-3 uppercase tracking-wide py-2.5 px-4">
                   Sensitivity Tag
                 </th>
@@ -167,23 +161,6 @@ export function SchemaStep({
                         </span>
                       )}
                     </div>
-                  </td>
-                  <td className="py-2 px-4">
-                    <Select
-                      value={row.type}
-                      onValueChange={(v) => updateRow(row.id, "type", v)}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {DATA_TYPES.map((t) => (
-                          <SelectItem key={t} value={t}>
-                            {t}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
                   </td>
                   <td className="py-2 px-4">
                     <Select

@@ -13,10 +13,10 @@ import { computeRisk, type RiskResult } from "@/lib/risk";
 import { uid } from "@/lib/utils";
 
 const DEFAULT_ROWS: SchemaRow[] = [
-  { id: uid(), name: "ZIP Code", type: "Number", sens: "Quasi-identifier", auto: false },
-  { id: uid(), name: "Age", type: "Number", sens: "Quasi-identifier", auto: false },
-  { id: uid(), name: "Gender", type: "Category", sens: "Quasi-identifier", auto: false },
-  { id: uid(), name: "Diagnosis", type: "Category", sens: "Sensitive", auto: false },
+  { id: uid(), name: "ZIP Code", sens: "Quasi-identifier", auto: false },
+  { id: uid(), name: "Age", sens: "Quasi-identifier", auto: false },
+  { id: uid(), name: "Gender", sens: "Quasi-identifier", auto: false },
+  { id: uid(), name: "Diagnosis", sens: "Sensitive", auto: false },
 ];
 
 export function RevealApp() {
